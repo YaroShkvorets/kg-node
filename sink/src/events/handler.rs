@@ -5,7 +5,7 @@ use prost::Message;
 use sdk::{error::DatabaseError, ids::create_geo_id, models::BlockMetadata, pb::geo::GeoOutput};
 use substreams_utils::pb::sf::substreams::rpc::v2::BlockScopedData;
 
-use crate::kg::{self};
+use crate::{kg, metrics};
 
 #[derive(thiserror::Error, Debug)]
 pub enum HandlerError {
@@ -62,6 +62,8 @@ impl substreams_utils::Sink for EventHandler {
 
         let block =
             get_block_metadata(data).map_err(|e| HandlerError::Other(format!("{e:?}").into()))?;
+
+        metrics::CURRENT_BLOCK_NUMBER.set(block.block_number as f64);
 
         let value = GeoOutput::decode(output.value.as_slice())?;
 

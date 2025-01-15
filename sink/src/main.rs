@@ -3,7 +3,7 @@ use std::env;
 use anyhow::Error;
 use axum::{response::Json, routing::get, Router};
 use clap::{Args, Parser};
-use sink::{events::EventHandler, kg};
+use sink::{events::EventHandler, kg, metrics};
 use substreams_utils::Sink;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -123,7 +123,9 @@ async fn health() -> Json<serde_json::Value> {
 }
 
 async fn start_health_server() {
-    let app = Router::new().route("/health", get(health));
+    let app = Router::new()
+        .route("/health", get(health))
+        .route("/metrics", get(metrics::metrics_handler));
 
     let port = env::var("KG_SINK_HEALTH_PORT")
         .ok()
@@ -141,6 +143,7 @@ async fn start_health_server() {
         .await
         .unwrap_or_else(|e| panic!("failed to start health server on {addr}: {e}"));
     tracing::info!("Health server listening on {addr}/health");
+    tracing::info!("Metrics available on {addr}/metrics");
 
     tokio::spawn(async move {
         axum::serve(listener, app)

@@ -58,12 +58,17 @@ impl substreams_utils::Sink for EventHandler {
     type Error = HandlerError;
 
     async fn process_block_scoped_data(&self, data: &BlockScopedData) -> Result<(), Self::Error> {
+        let _timer = metrics::BLOCK_PROCESSING_TIME.start_timer();
+
         let output = data.output.as_ref().unwrap().map_output.as_ref().unwrap();
 
         let block =
             get_block_metadata(data).map_err(|e| HandlerError::Other(format!("{e:?}").into()))?;
 
-        metrics::CURRENT_BLOCK_NUMBER.set(block.block_number as f64);
+        let drift = chrono::Utc::now().timestamp() - block.timestamp.timestamp();
+        metrics::HEAD_BLOCK_TIME_DRIFT.set(drift as f64);
+        metrics::HEAD_BLOCK_NUMBER.set(block.block_number as f64);
+        metrics::HEAD_BLOCK_TIMESTAMP.set(block.timestamp.timestamp() as f64);
 
         let value = GeoOutput::decode(output.value.as_slice())?;
 

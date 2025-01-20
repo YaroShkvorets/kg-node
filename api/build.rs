@@ -9,7 +9,7 @@ fn main() {
         .map(|hash| hash.trim().to_string())
         .unwrap_or_else(|| "unknown".to_string());
 
-    let git_version = Command::new("git")
+    let git_tag = Command::new("git")
         .args(["describe", "--tags", "--always"])
         .output()
         .ok()
@@ -18,7 +18,7 @@ fn main() {
         .unwrap_or_else(|| "unknown".to_string());
 
     println!("cargo:rustc-env=GIT_COMMIT={}", git_hash);
-    println!("cargo:rustc-env=GIT_VERSION={}", git_version);
+    println!("cargo:rustc-env=GIT_TAG={}", git_tag);
 
     // Always rerun if any git changes occur
     println!("cargo:rerun-if-changed=.git/HEAD");

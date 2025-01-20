@@ -38,7 +38,7 @@ async fn version() -> Json<serde_json::Value> {
     Json(serde_json::json!({
         "version": env!("CARGO_PKG_VERSION"),
         "git": {
-            "version": env!("GIT_VERSION"),
+            "tag": env!("GIT_TAG"),
             "commit": env!("GIT_COMMIT"),
         },
     }))
